@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { Copy, Check, Hash } from "lucide-react";
+import { Copy, Check, Hash, ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { useBlock } from "../hooks/useBlockchain";
 import {

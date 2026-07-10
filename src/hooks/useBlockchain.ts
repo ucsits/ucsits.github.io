@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import type { Block } from "../types/blockchain";
+import type { PaginatedBlocksResponse } from "../types/blockchain";
 import { computeStats } from "../types/blockchain";
 
 const API_BASE = "https://luce.ucs.or.id/api/v1";
@@ -10,13 +11,13 @@ export function useBlockchain() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${API_BASE}/blocks`, { mode: "cors" })
+    fetch(`${API_BASE}/blocks?page=1&limit=10000`, { mode: "cors" })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<Block[]>;
+        return res.json() as Promise<PaginatedBlocksResponse>;
       })
-      .then((data) => {
-        setBlocks(data);
+      .then((res) => {
+        setBlocks(res.data);
         setLoading(false);
       })
       .catch((err: Error) => {

@@ -66,14 +66,122 @@ function TaskView(payload: TaskPayload) {
   );
 }
 
+/**
+ * Attempt to decode a base64 string, returning the decoded text or null if
+ * the input is not valid base64.
+ */
+function tryDecodeBase64(str: string): string | null {
+  try {
+    const decoded = atob(str);
+    // Basic sanity: ensure the output is valid UTF-8 by encoding back
+    try {
+      encodeURIComponent(decoded);
+    } catch {
+      return null;
+    }
+    return decoded;
+  } catch {
+    return null;
+  }
+}
+
+/** MIME types whose content we render inline (decoded from base64). */
+const DISPLAYABLE_TEXT_TYPES = new Set([
+  "text/plain",
+  "text/markdown",
+  "text/html",
+  "text/css",
+  "text/csv",
+  "text/xml",
+  "application/json",
+  "application/xml",
+  "application/javascript",
+  "application/ecmascript",
+  "application/typescript",
+  "application/yaml",
+  "application/toml",
+]);
+
+function isDisplayableText(mime: string): boolean {
+  return DISPLAYABLE_TEXT_TYPES.has(mime) || mime.startsWith("text/");
+}
+
 function DocumentView(payload: DocumentPayload) {
+  const mime = payload.mimeType;
+  const isImage = mime.startsWith("image/");
+  const isPdf = mime === "application/pdf";
+
+  // For displayable text types, decode base64 content and render inline
+  if (isDisplayableText(mime)) {
+    const decoded = tryDecodeBase64(payload.content) ?? payload.content;
+    return (
+      <>
+        <Field label="Title" value={payload.title} />
+        <Field label="Document ID" value={payload.docId} mono copyable />
+        <Field label="Author" value={payload.author} mono />
+        <Field label="Mime Type" value={mime} mono />
+        <div className={styles.renderedContent}>
+          <pre><code>{decoded}</code></pre>
+        </div>
+      </>
+    );
+  }
+
+  // Image types: render inline with a data URI
+  if (isImage) {
+    return (
+      <>
+        <Field label="Title" value={payload.title} />
+        <Field label="Document ID" value={payload.docId} mono copyable />
+        <Field label="Author" value={payload.author} mono />
+        <Field label="Mime Type" value={mime} mono />
+        <div className={styles.renderedImageWrap}>
+          <img
+            src={`data:${mime};base64,${payload.content}`}
+            alt={payload.title}
+            className={styles.renderedImage}
+          />
+        </div>
+      </>
+    );
+  }
+
+  // PDF: embed via iframe
+  if (isPdf) {
+    return (
+      <>
+        <Field label="Title" value={payload.title} />
+        <Field label="Document ID" value={payload.docId} mono copyable />
+        <Field label="Author" value={payload.author} mono />
+        <Field label="Mime Type" value={mime} mono />
+        <div className={styles.renderedPdfWrap}>
+          <iframe
+            src={`data:${mime};base64,${payload.content}`}
+            className={styles.renderedPdf}
+            title={payload.title}
+          />
+        </div>
+      </>
+    );
+  }
+
+  // Fallback: unknown binary type — show a download link
   return (
     <>
       <Field label="Title" value={payload.title} />
       <Field label="Document ID" value={payload.docId} mono copyable />
       <Field label="Author" value={payload.author} mono />
-      <Field label="Mime Type" value={payload.mimeType} mono />
+      <Field label="Mime Type" value={mime} mono />
       <Field label="Content" value={payload.content} />
+      <div className={styles.downloadWrap}>
+        <a
+          href={`data:${mime};base64,${payload.content}`}
+          download={payload.title}
+          className={styles.downloadLink}
+        >
+          Download File
+        </a>
+      </div>
     </>
   );
 }

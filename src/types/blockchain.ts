@@ -94,6 +94,25 @@ export interface ChainStats {
   latestTimestamp: number;
 }
 
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  total_pages: number;
+}
+
+export interface PaginatedBlocksResponse {
+  data: Block[];
+  pagination: PaginationMeta;
+}
+
+export interface ChainSummary {
+  height: number;
+  blocks: number;
+  best_block_hash: string;
+  last_block?: Block;
+}
+
 export function computeStats(blocks: Block[]): ChainStats {
   const authors = new Set<number>();
   let taskCount = 0;

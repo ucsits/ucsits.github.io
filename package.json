@@ -5,8 +5,8 @@
   "packageManager": "pnpm@10.25.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "bash scripts/fetch-ctftime-data.sh && vite",
+    "build": "bash scripts/fetch-ctftime-data.sh && tsc -b && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

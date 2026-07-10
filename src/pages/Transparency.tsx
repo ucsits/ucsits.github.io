@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useBlockchain, usePageBlocks } from "../hooks/useBlockchain";
 import { ChainStats } from "../components/ChainStats";
+import { CtftimeWidget } from "../components/CtftimeWidget";
 import { BlockList } from "../components/BlockList";
 import styles from "./Transparency.module.scss";
 import logoSrc from "./../assets/logo-text-light.png";
@@ -59,6 +60,9 @@ function Transparency() {
           <section className={styles.splitSection}>
             <div className={styles.splitLeft}>
               <ChainStats stats={stats} />
+              <div style={{ marginTop: 20 }}>
+                <CtftimeWidget />
+              </div>
             </div>
             <div className={styles.splitRight}>
               <div className={styles.sectionHeader}>

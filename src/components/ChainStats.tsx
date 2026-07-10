@@ -3,7 +3,7 @@ import type { ChainStats as ChainStatsType } from "../types/blockchain";
 import {
   Database,
   Users,
-  ListTodo,
+  ClipboardList,
   CheckCircle,
   FileText,
   Award,
@@ -42,7 +42,7 @@ export function ChainStats({ stats }: Props) {
       {/* Task progress pair */}
       <div className={styles.taskPair}>
         <div className={styles.taskSide}>
-          <ListTodo size={80} className={styles.bgIcon} />
+          <ClipboardList size={80} className={styles.bgIcon} />
           <div className={styles.taskBody}>
             <AnimatedValue value={stats.taskCount} className={styles.taskValue} />
             <span className={styles.taskDesc}>Tasks</span>

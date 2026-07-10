@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import type { Block } from "../types/blockchain";
 import { computeStats } from "../types/blockchain";
 
-const API_BASE = "http://167.253.159.178:5500/api/v1";
+const API_BASE = "https://luce.ucs.or.id/api/v1";
 
 export function useBlockchain() {
   const [blocks, setBlocks] = useState<Block[]>([]);

@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Loader2 } from "lucide-react";
 import type { Block } from "../types/blockchain";
 import { parseBlockData } from "../types/blockchain";
 import { BlockCard } from "./BlockCard";
@@ -7,9 +7,11 @@ import styles from "./BlockList.module.scss";
 
 interface Props {
   blocks: Block[];
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  loading?: boolean;
 }
-
-const PAGE_SIZE = 10;
 
 const TYPE_FILTERS: Array<{ value: string; label: string }> = [
   { value: "", label: "All types" },
@@ -20,18 +22,13 @@ const TYPE_FILTERS: Array<{ value: string; label: string }> = [
   { value: "genesis", label: "Genesis" },
 ];
 
-export function BlockList({ blocks }: Props) {
+export function BlockList({ blocks, currentPage, totalPages, onPageChange, loading }: Props) {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
-  const [page, setPage] = useState(1);
 
-  const sorted = useMemo(
-    () => [...blocks].sort((a, b) => b.height - a.height),
-    [blocks]
-  );
-
+  // Filter only the currently loaded page blocks
   const filtered = useMemo(() => {
-    return sorted.filter((block) => {
+    return blocks.filter((block) => {
       if (typeFilter) {
         const parsed = parseBlockData(block);
         if (parsed.type !== typeFilter) return false;
@@ -41,21 +38,11 @@ export function BlockList({ blocks }: Props) {
         if (String(block.height).includes(q)) return true;
         if (block.hash.toLowerCase().includes(q)) return true;
         if (String(block.author).includes(q)) return true;
+        return false;
       }
-      return !search;
+      return true;
     });
-  }, [sorted, search, typeFilter]);
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const pageBlocks = filtered.slice(
-    (safePage - 1) * PAGE_SIZE,
-    safePage * PAGE_SIZE
-  );
-
-  function goTo(p: number) {
-    setPage(Math.max(1, Math.min(p, totalPages)));
-  }
+  }, [blocks, search, typeFilter]);
 
   return (
     <div className={styles.container}>
@@ -69,7 +56,6 @@ export function BlockList({ blocks }: Props) {
             value={search}
             onChange={(e) => {
               setSearch(e.target.value);
-              setPage(1);
             }}
           />
         </div>
@@ -78,7 +64,6 @@ export function BlockList({ blocks }: Props) {
           value={typeFilter}
           onChange={(e) => {
             setTypeFilter(e.target.value);
-            setPage(1);
           }}
         >
           {TYPE_FILTERS.map((f) => (
@@ -89,11 +74,11 @@ export function BlockList({ blocks }: Props) {
         </select>
       </div>
 
-      {pageBlocks.length === 0 ? (
+      {filtered.length === 0 && !loading ? (
         <div className={styles.empty}>No blocks match your filters.</div>
       ) : (
         <div className={styles.list}>
-          {pageBlocks.map((block) => (
+          {filtered.map((block) => (
             <BlockCard key={block.height} block={block} />
           ))}
         </div>
@@ -102,19 +87,20 @@ export function BlockList({ blocks }: Props) {
       <div className={styles.pagination}>
         <button
           className={styles.pageBtn}
-          disabled={safePage <= 1}
-          onClick={() => goTo(safePage - 1)}
+          disabled={currentPage <= 1}
+          onClick={() => onPageChange(currentPage - 1)}
           aria-label="Previous page"
         >
           <ChevronLeft size={15} />
         </button>
         <span className={styles.pageInfo}>
-          {safePage} / {totalPages}
+          {currentPage} / {totalPages}
+          {loading && <Loader2 size={12} className={styles.spinner} />}
         </span>
         <button
           className={styles.pageBtn}
-          disabled={safePage >= totalPages}
-          onClick={() => goTo(safePage + 1)}
+          disabled={currentPage >= totalPages}
+          onClick={() => onPageChange(currentPage + 1)}
           aria-label="Next page"
         >
           <ChevronRight size={15} />

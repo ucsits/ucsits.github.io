@@ -1,12 +1,14 @@
 import { Link } from "react-router-dom";
-import { useBlockchain } from "../hooks/useBlockchain";
+import { useBlockchain, usePageBlocks } from "../hooks/useBlockchain";
 import { ChainStats } from "../components/ChainStats";
 import { BlockList } from "../components/BlockList";
 import styles from "./Transparency.module.scss";
 import logoSrc from "./../assets/logo-text-light.png";
 
 function Transparency() {
-  const { blocks, stats, loading, error } = useBlockchain();
+  const { totalPages, stats, loading, error } = useBlockchain();
+  const { currentPage, goToPage, pageBlocks, isPageLoading } =
+    usePageBlocks(totalPages);
 
   return (
     <div className={styles.page}>
@@ -14,13 +16,18 @@ function Transparency() {
       <header className={styles.header}>
         <div className={styles.headerInner}>
           <div className={styles.headerLeft}>
-            <img src={logoSrc} alt="UKM Cyber Security ITS" className={styles.headerIcon} />
+            <img
+              src={logoSrc}
+              alt="UKM Cyber Security ITS"
+              className={styles.headerIcon}
+            />
             <div>
-              <h1 className={styles.title}>UKM Cyber Security ITS Transparency Page</h1>
+              <h1 className={styles.title}>
+                UKM Cyber Security ITS Transparency Page
+              </h1>
             </div>
           </div>
-          <div className={styles.headerRight}>
-          </div>
+          <div className={styles.headerRight}></div>
         </div>
       </header>
 
@@ -68,7 +75,13 @@ function Transparency() {
                   .
                 </p>
               </div>
-              <BlockList blocks={blocks} />
+              <BlockList
+                blocks={pageBlocks}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={goToPage}
+                loading={isPageLoading}
+              />
             </div>
           </section>
         </>

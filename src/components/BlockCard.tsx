@@ -3,6 +3,7 @@ import { User, Clock } from "lucide-react";
 import type { Block, BlockPayload } from "../types/blockchain";
 import {
   parseBlockData,
+  getContentAuthor,
   getTypeColor,
   getBlockTypeLabel,
   formatRelativeTime,
@@ -21,6 +22,8 @@ function getSummary(type: string, payload: BlockPayload | undefined): string {
       return payload.title;
     case "task_done":
       return `Task completed: ${payload.taskId}`;
+    case "task_cancel":
+      return `Task canceled: ${payload.taskId}`;
     case "document":
       return payload.title;
     case "rep":
@@ -61,7 +64,11 @@ export function BlockCard({ block }: Props) {
         <div className={styles.meta}>
           <span className={styles.metaItem}>
             <User size={12} />
-            {block.author}
+            {getContentAuthor(payload) ?? String(block.author)}
+          </span>
+          <span className={styles.metaSep} />
+          <span className={styles.metaItem}>
+            Forger {String(block.author)}
           </span>
           <span className={styles.metaSep} />
           <span className={styles.metaItem}>

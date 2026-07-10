@@ -35,7 +35,7 @@ export function useBlockchain() {
 
   // Step 2: Fetch all blocks for stats (background, non-blocking)
   useEffect(() => {
-    fetch(`${API_BASE}/blocks?page=1&limit=10000`, { mode: "cors" })
+    fetch(`${API_BASE}/blocks?page=1&limit=10000&desc=true`, { mode: "cors" })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json() as Promise<PaginatedBlocksResponse>;
@@ -90,16 +90,13 @@ export function usePageBlocks(totalPages: number) {
 
       try {
         const res = await fetch(
-          `${API_BASE}/blocks?page=${page}&limit=${PAGE_SIZE}`,
+          `${API_BASE}/blocks?page=${page}&limit=${PAGE_SIZE}&desc=true`,
           { mode: "cors" }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = (await res.json()) as PaginatedBlocksResponse;
 
-        // Blocks arrive in ascending height; sort descending for display
-        const sorted = [...json.data].sort((a, b) => b.height - a.height);
-
-        cacheRef.current = { ...cacheRef.current, [page]: sorted };
+        cacheRef.current = { ...cacheRef.current, [page]: json.data };
         setPagesCache({ ...cacheRef.current });
       } catch (err: any) {
         console.error(`Failed to load page ${page}:`, err.message);

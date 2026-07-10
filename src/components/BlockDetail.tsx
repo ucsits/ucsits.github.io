@@ -259,7 +259,7 @@ export function BlockDetail() {
             </span>
           </div>
           <p className={styles.heroMeta}>
-            {formatTimestamp(block.timestamp)} · Author {String(block.author)}
+            {formatTimestamp(block.timestamp)} · Forger {String(block.author)}
           </p>
         </div>
       </div>
@@ -279,7 +279,7 @@ export function BlockDetail() {
             mono
             copyable={block.height !== 0}
           />
-          <Field label="Author ID" value={String(block.author)} mono />
+          <Field label="Forger ID" value={String(block.author)} mono />
           <Field label="Timestamp" value={formatTimestamp(block.timestamp)} />
           <Field label="Height" value={String(block.height)} mono />
         </div>
@@ -294,6 +294,12 @@ export function BlockDetail() {
               <>
                 <Field label="Task ID" value={(payload as any).taskId} mono copyable />
                 <Field label="Completed By" value={(payload as any).completedBy} mono />
+              </>
+            )}
+            {payload.type === "task_cancel" && (
+              <>
+                <Field label="Task ID" value={(payload as any).taskId} mono copyable />
+                <Field label="Cancelled By" value={(payload as any).cancelledBy} mono />
               </>
             )}
             {payload.type === "document" && <DocumentView {...(payload as DocumentPayload)} />}

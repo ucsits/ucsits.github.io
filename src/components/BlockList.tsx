@@ -17,6 +17,7 @@ const TYPE_FILTERS: Array<{ value: string; label: string }> = [
   { value: "", label: "All types" },
   { value: "task", label: "Task" },
   { value: "task_done", label: "Task Done" },
+  { value: "task_cancel", label: "Task Cancel" },
   { value: "document", label: "Document" },
   { value: "rep", label: "Rep" },
   { value: "genesis", label: "Genesis" },

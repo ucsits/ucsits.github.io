@@ -25,6 +25,13 @@ export interface TaskDonePayload {
   completedBy: string;
 }
 
+export interface TaskCancelPayload {
+  type: "task_cancel";
+  v: number;
+  taskId: string;
+  cancelledBy: string;
+}
+
 export interface DocumentPayload {
   type: "document";
   v: number;
@@ -48,12 +55,14 @@ export interface RepPayload {
 export type BlockPayload =
   | TaskPayload
   | TaskDonePayload
+  | TaskCancelPayload
   | DocumentPayload
   | RepPayload;
 
 export type BlockDataType =
   | "task"
   | "task_done"
+  | "task_cancel"
   | "document"
   | "rep"
   | "genesis"
@@ -89,6 +98,7 @@ export interface ChainStats {
   uniqueAuthors: number;
   taskCount: number;
   taskDoneCount: number;
+  taskCancelCount: number;
   documentCount: number;
   repCount: number;
   latestTimestamp: number;
@@ -117,6 +127,7 @@ export function computeStats(blocks: Block[]): ChainStats {
   const authors = new Set<number>();
   let taskCount = 0;
   let taskDoneCount = 0;
+  let taskCancelCount = 0;
   let documentCount = 0;
   let repCount = 0;
   let latestTimestamp = 0;
@@ -133,6 +144,9 @@ export function computeStats(blocks: Block[]): ChainStats {
       case "task_done":
         taskDoneCount++;
         break;
+      case "task_cancel":
+        taskCancelCount++;
+        break;
       case "document":
         documentCount++;
         break;
@@ -147,6 +161,7 @@ export function computeStats(blocks: Block[]): ChainStats {
     uniqueAuthors: authors.size,
     taskCount,
     taskDoneCount,
+    taskCancelCount,
     documentCount,
     repCount,
     latestTimestamp,
@@ -161,6 +176,8 @@ export function getTypeColor(type: BlockDataType): string {
       return "#4caf50";
     case "document":
       return "#ff9800";
+    case "task_cancel":
+      return "#e53935";
     case "rep":
       return "#ab47bc";
     case "genesis":
@@ -195,10 +212,34 @@ export function truncateId(id: number | string): string {
   return `${str.slice(0, 6)}...${str.slice(-4)}`;
 }
 
+/**
+ * Extract the content-level author/creator from a parsed payload.
+ * Returns a Discord snowflake string, or null if the payload type has no author field.
+ */
+export function getContentAuthor(payload?: BlockPayload): string | null {
+  if (!payload) return null;
+  switch (payload.type) {
+    case "document":
+      return payload.author;
+    case "task":
+      return payload.createdBy;
+    case "task_done":
+      return payload.completedBy;
+    case "task_cancel":
+      return payload.cancelledBy;
+    case "rep":
+      return payload.fromUser;
+    default:
+      return null;
+  }
+}
+
 export function getBlockTypeLabel(type: BlockDataType): string {
   switch (type) {
     case "task":
       return "Task";
+    case "task_cancel":
+      return "Task Cancel";
     case "task_done":
       return "Task Done";
     case "document":

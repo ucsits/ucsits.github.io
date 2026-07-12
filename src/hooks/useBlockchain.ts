@@ -18,7 +18,8 @@ export function useBlockchain() {
 
   // Step 1: Fetch chain summary first (gives us height immediately)
   useEffect(() => {
-    fetch(`${API_BASE}/chain/summary`, { mode: "cors" })
+    const controller = new AbortController();
+    fetch(`${API_BASE}/chain/summary`, { mode: "cors", signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json() as Promise<ChainSummary>;
@@ -28,14 +29,18 @@ export function useBlockchain() {
         setLoading(false);
       })
       .catch((err: Error) => {
-        setError(err.message);
-        setLoading(false);
+        if (err.name !== "AbortError") {
+          setError(err.message);
+          setLoading(false);
+        }
       });
+    return () => { controller.abort(); };
   }, []);
 
   // Step 2: Fetch all blocks for stats (background, non-blocking)
   useEffect(() => {
-    fetch(`${API_BASE}/blocks?page=1&limit=10000&desc=true`, { mode: "cors" })
+    const controller = new AbortController();
+    fetch(`${API_BASE}/blocks?page=1&limit=10000&desc=true`, { mode: "cors", signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json() as Promise<PaginatedBlocksResponse>;
@@ -46,6 +51,7 @@ export function useBlockchain() {
       .catch(() => {
         // Stats may be unavailable; component handles gracefully
       });
+    return () => { controller.abort(); };
   }, []);
 
   const totalPages = useMemo(() => {
@@ -70,6 +76,15 @@ export function usePageBlocks(totalPages: number) {
   // Refs for guard checks — avoids stale closure issues
   const cacheRef = useRef<Record<number, Block[]>>({});
   const loadingRef = useRef<Set<number>>(new Set());
+  const controllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (controllerRef.current) {
+        controllerRef.current.abort();
+      }
+    };
+  }, []);
 
   useEffect(() => {
     cacheRef.current = pagesCache;
@@ -89,9 +104,11 @@ export function usePageBlocks(totalPages: number) {
       setLoadingPages(new Set(loadingRef.current));
 
       try {
+        const controller = new AbortController();
+        controllerRef.current = controller;
         const res = await fetch(
           `${API_BASE}/blocks?page=${page}&limit=${PAGE_SIZE}&desc=true`,
-          { mode: "cors" }
+          { mode: "cors", signal: controller.signal }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = (await res.json()) as PaginatedBlocksResponse;
@@ -99,7 +116,9 @@ export function usePageBlocks(totalPages: number) {
         cacheRef.current = { ...cacheRef.current, [page]: json.data };
         setPagesCache({ ...cacheRef.current });
       } catch (err: any) {
-        console.error(`Failed to load page ${page}:`, err.message);
+        if (err.name !== "AbortError") {
+          console.error(`Failed to load page ${page}:`, err.message);
+        }
       } finally {
         loadingRef.current = new Set(loadingRef.current);
         loadingRef.current.delete(page);
@@ -146,9 +165,10 @@ export function useBlock(height: number) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
     setLoading(true);
     setError(null);
-    fetch(`${API_BASE}/blocks/${height}`, { mode: "cors" })
+    fetch(`${API_BASE}/blocks/${height}`, { mode: "cors", signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json() as Promise<Block>;
@@ -158,9 +178,12 @@ export function useBlock(height: number) {
         setLoading(false);
       })
       .catch((err: Error) => {
-        setError(err.message);
-        setLoading(false);
+        if (err.name !== "AbortError") {
+          setError(err.message);
+          setLoading(false);
+        }
       });
+    return () => { controller.abort(); };
   }, [height]);
 
   return { block, loading, error } as const;

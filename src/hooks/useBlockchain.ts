@@ -40,7 +40,7 @@ export function useBlockchain() {
   // Step 2: Fetch all blocks for stats (background, non-blocking)
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`${API_BASE}/blocks?page=1&limit=10000&desc=true`, { mode: "cors", signal: controller.signal })
+    fetch(`${API_BASE}/blocks?page=1&limit=${PAGE_SIZE}&desc=true`, { mode: "cors", signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json() as Promise<PaginatedBlocksResponse>;

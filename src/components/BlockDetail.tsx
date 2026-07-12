@@ -110,19 +110,26 @@ function DocumentView(payload: DocumentPayload) {
   const mime = payload.mimeType;
   const isImage = mime.startsWith("image/");
   const isPdf = mime === "application/pdf";
+  const hasContent = !!payload.content;
 
   // For displayable text types, decode base64 content and render inline
   if (isDisplayableText(mime)) {
-    const decoded = tryDecodeBase64(payload.content) ?? payload.content;
+    const decoded = hasContent ? (tryDecodeBase64(payload.content!) ?? payload.content!) : "";
     return (
       <>
         <Field label="Title" value={payload.title} />
         <Field label="Document ID" value={payload.docId} mono copyable />
         <Field label="Author" value={payload.author} mono />
         <Field label="Mime Type" value={mime} mono />
-        <div className={styles.renderedContent}>
-          <pre><code>{decoded}</code></pre>
-        </div>
+        {hasContent ? (
+          <div className={styles.renderedContent}>
+            <pre><code>{decoded}</code></pre>
+          </div>
+        ) : (
+          <div className={styles.renderedContent}>
+            <pre><code>{"// Content loaded on demand"}</code></pre>
+          </div>
+        )}
       </>
     );
   }
@@ -135,13 +142,19 @@ function DocumentView(payload: DocumentPayload) {
         <Field label="Document ID" value={payload.docId} mono copyable />
         <Field label="Author" value={payload.author} mono />
         <Field label="Mime Type" value={mime} mono />
-        <div className={styles.renderedImageWrap}>
-          <img
-            src={`data:${mime};base64,${payload.content}`}
-            alt={payload.title}
-            className={styles.renderedImage}
-          />
-        </div>
+        {hasContent ? (
+          <div className={styles.renderedImageWrap}>
+            <img
+              src={`data:${mime};base64,${payload.content}`}
+              alt={payload.title}
+              className={styles.renderedImage}
+            />
+          </div>
+        ) : (
+          <div className={styles.renderedImageWrap}>
+            <span>Image content not available in list view</span>
+          </div>
+        )}
       </>
     );
   }
@@ -154,13 +167,19 @@ function DocumentView(payload: DocumentPayload) {
         <Field label="Document ID" value={payload.docId} mono copyable />
         <Field label="Author" value={payload.author} mono />
         <Field label="Mime Type" value={mime} mono />
-        <div className={styles.renderedPdfWrap}>
-          <iframe
-            src={`data:${mime};base64,${payload.content}`}
-            className={styles.renderedPdf}
-            title={payload.title}
-          />
-        </div>
+        {hasContent ? (
+          <div className={styles.renderedPdfWrap}>
+            <iframe
+              src={`data:${mime};base64,${payload.content}`}
+              className={styles.renderedPdf}
+              title={payload.title}
+            />
+          </div>
+        ) : (
+          <div className={styles.renderedPdfWrap}>
+            <span>PDF content not available in list view</span>
+          </div>
+        )}
       </>
     );
   }
@@ -172,16 +191,22 @@ function DocumentView(payload: DocumentPayload) {
       <Field label="Document ID" value={payload.docId} mono copyable />
       <Field label="Author" value={payload.author} mono />
       <Field label="Mime Type" value={mime} mono />
-      <Field label="Content" value={payload.content} />
-      <div className={styles.downloadWrap}>
-        <a
-          href={`data:${mime};base64,${payload.content}`}
-          download={payload.title}
-          className={styles.downloadLink}
-        >
-          Download File
-        </a>
-      </div>
+      {hasContent ? (
+        <>
+          <Field label="Content" value={payload.content!} />
+          <div className={styles.downloadWrap}>
+            <a
+              href={`data:${mime};base64,${payload.content}`}
+              download={payload.title}
+              className={styles.downloadLink}
+            >
+              Download File
+            </a>
+          </div>
+        </>
+      ) : (
+        <Field label="Content" value="Content not available in list view" />
+      )}
     </>
   );
 }

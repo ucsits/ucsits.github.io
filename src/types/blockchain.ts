@@ -37,9 +37,12 @@ export interface DocumentPayload {
   v: number;
   docId: string;
   title: string;
-  content: string;
+  content?: string; // Optional: omitted in lightweight list responses
   author: string;
   mimeType: string;
+  filename?: string;
+  fileSize?: number;
+  encoding?: string;
 }
 
 export interface RepPayload {
@@ -114,6 +117,11 @@ export interface PaginationMeta {
 export interface PaginatedBlocksResponse {
   data: Block[];
   pagination: PaginationMeta;
+}
+
+// Lightweight response for block listings (document content stripped)
+export interface LightweightBlock extends Omit<Block, "data"> {
+  data: string; // JSON string, but document content is stripped
 }
 
 export interface ChainSummary {

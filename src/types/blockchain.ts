@@ -129,6 +129,27 @@ export interface ChainSummary {
   blocks: number;
   best_block_hash: string;
   last_block?: Block;
+  author_count: number;
+  document_count: number;
+  task_count: number;
+  task_done_count: number;
+  task_cancelled_count: number;
+  task_done_past_deadline_count: number;
+  rep_count: number;
+}
+
+/** Convert a ChainSummary response directly into ChainStats. */
+export function summaryToStats(summary: ChainSummary): ChainStats {
+  return {
+    totalBlocks: summary.blocks,
+    uniqueAuthors: summary.author_count,
+    taskCount: summary.task_count,
+    taskDoneCount: summary.task_done_count,
+    taskCancelCount: summary.task_cancelled_count,
+    documentCount: summary.document_count,
+    repCount: summary.rep_count,
+    latestTimestamp: summary.last_block?.timestamp ?? 0,
+  };
 }
 
 export function computeStats(blocks: Block[]): ChainStats {

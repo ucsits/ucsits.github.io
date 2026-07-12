@@ -59,7 +59,7 @@ function Transparency() {
           {/* Split section: ChainStats left, Activity Log right */}
           <section className={styles.splitSection}>
             <div className={styles.splitLeft}>
-              <ChainStats stats={stats} />
+              {stats && <ChainStats stats={stats} />}
               <div style={{ marginTop: 20 }}>
                 <CtftimeWidget />
               </div>

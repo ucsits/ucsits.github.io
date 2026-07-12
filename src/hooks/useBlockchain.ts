@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import type { Block, ChainSummary, PaginatedBlocksResponse } from "../types/blockchain";
-import { computeStats } from "../types/blockchain";
+import type { Block, ChainSummary, ChainStats as ChainStatsType, PaginatedBlocksResponse } from "../types/blockchain";
+import { summaryToStats } from "../types/blockchain";
 
 const API_BASE = "https://luce.ucs.or.id/api/v1";
 export const PAGE_SIZE = 20;
@@ -12,11 +12,10 @@ export const PAGE_SIZE = 20;
  */
 export function useBlockchain() {
   const [chainHeight, setChainHeight] = useState<number | null>(null);
-  const [allBlocks, setAllBlocks] = useState<Block[]>([]);
+  const [stats, setStats] = useState<ChainStatsType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Step 1: Fetch chain summary first (gives us height immediately)
   useEffect(() => {
     const controller = new AbortController();
     fetch(`${API_BASE}/chain/summary`, { mode: "cors", signal: controller.signal })
@@ -26,6 +25,7 @@ export function useBlockchain() {
       })
       .then((summary) => {
         setChainHeight(summary.height);
+        setStats(summaryToStats(summary));
         setLoading(false);
       })
       .catch((err: Error) => {
@@ -37,29 +37,10 @@ export function useBlockchain() {
     return () => { controller.abort(); };
   }, []);
 
-  // Step 2: Fetch all blocks for stats (background, non-blocking)
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch(`${API_BASE}/blocks?page=1&limit=${PAGE_SIZE}&desc=true`, { mode: "cors", signal: controller.signal })
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json() as Promise<PaginatedBlocksResponse>;
-      })
-      .then((res) => {
-        setAllBlocks(res.data);
-      })
-      .catch(() => {
-        // Stats may be unavailable; component handles gracefully
-      });
-    return () => { controller.abort(); };
-  }, []);
-
   const totalPages = useMemo(() => {
     if (chainHeight === null) return 0;
     return Math.max(1, Math.ceil(chainHeight / PAGE_SIZE));
   }, [chainHeight]);
-
-  const stats = useMemo(() => computeStats(allBlocks), [allBlocks]);
 
   return { chainHeight, totalPages, stats, loading, error };
 }
